@@ -28,7 +28,7 @@ jobs:
           ls ~/torrent_downloads  # List files in the download directory
 
       - name: Upload Downloaded Files
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3  # Updated to v3
         with:
           name: downloaded-files
           path: ~/torrent_downloads/*  # Upload all files in the download directory
