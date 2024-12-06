@@ -1,42 +1,31 @@
-name: Torrent Download with Transmission
+name: Torrent Download
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual triggering of the workflow
 
 jobs:
   download:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Transmission CLI
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Specify the version of Node.js you want to use
+
+      - name: Install torrent-dl
         run: |
-          sudo apt-get update
-          sudo apt-get install -y transmission-cli
+          npm install -g torrent-dl
 
-      - name: Create Directory for Downloads
+      - name: Torrent Download
+        env:
+          TORRENT_CREDENTIALS: ${{ secrets.TORRENT_CREDENTIALS }}
         run: |
-          mkdir -p ~/torrent_downloads  # Create a download directory
-
-      - name: Download Torrent
-        run: |
-          echo "Starting torrent download..."
-          # Run transmission-cli in the background
-          transmission-cli -w ~/torrent_downloads "magnet:?xt=urn:btih:119C1E5EBECBA1F680DDA572B8FBB7F6DB6D95E1&dn=Arcane.S02E01.1080p.WEB.H264-SuccessfulCrab%5BTGx%5D&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.birkenwald.de%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fuploads.gamecoast.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.foreverpirates.co%3A443%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" &
-          TRANSMISSION_PID=$!  # Store the process ID
-
-          # Optional: Sleep to allow some downloads to initiate.
-          sleep 3600  # Adjust the duration as needed for your downloads to complete
-
-          # Stop seeding by killing the transmission-cli process
-          echo "Stopping seeding..."
-          kill $TRANSMISSION_PID || true  # Kill the process, ignore errors if it has already ended
-
-      - name: List Downloaded Files
-        run: |
-          echo "Downloaded files:"
-          ls ~/torrent_downloads  # List files in the download directory
-
-      # Optional cleanup
-      - name: Clean Up
-        run: |
-          echo "Optional clean-up actions here."
+          # Create a directory to store the downloads
+          mkdir -p downloads
+          
+          # Use torrent-dl to download the specified torrent
+          torrent-dl -i "magnet:?xt=urn:btih:119C1E5EBECBA1F680DDA572B8FBB7F6DB6D95E1&dn=Arcane.S02E01.1080p.WEB.H264-SuccessfulCrab%5BTGx%5D&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Fexplodie.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.birkenwald.de%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&tr=udp%3A%2F%2Fopentor.org%3A2710%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fuploads.gamecoast.net%3A6969%2Fannounce&tr=https%3A%2F%2Ftracker.foreverpirates.co%3A443%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce" -o downloads/
