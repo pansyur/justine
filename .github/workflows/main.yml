@@ -1,0 +1,41 @@
+name: Torrent Download with TorrentP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Use the desired version of Python
+
+      - name: Install TorrentP
+        run: |
+          pip install torrentp
+
+      - name: Create Directory for Downloads
+        run: |
+          mkdir -p ~/torrent_downloads  # Create a directory in the home folder
+
+      - name: Download Torrent
+        run: |
+          # Replace with your actual magnet link or torrent file URL
+          echo "Starting torrent download..."
+          torrentp add "magnet:?xt=urn:btih:3716A56E7EEBED5B721CB8F6C98F3BF44E6946A2&tr=udp%3A%2F%2Ftracker.bitsearch.to%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=udp%3A%2F%2Ftracker.uw0.xyz%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.moeking.me%3A6969%2Fannounce&dn=%5BBitsearch.to%5D+13+Ghosts+(1960)+%5BBluRay%5D+%5B720p%5D+%5BYTS.LT%5D" --output-dir "~/torrent_downloads"
+          
+          # Optional: Sleep to allow some downloads to initiate.
+          sleep 3600  # Adjust the duration as needed for your downloads to complete
+
+      - name: List Downloaded Files
+        run: |
+          echo "Downloaded files:"
+          ls ~/torrent_downloads  # List files in the download directory
+
+      - name: Clean Up
+        run: |
+          # Stop torrentp if necessary (this assumes a command for stopping exists; adjust as needed)
+          torrentp stop  # Adjust according to the way torrentp can be stopped
