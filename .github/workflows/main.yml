@@ -15,7 +15,7 @@ jobs:
 
       - name: Create Directory for Downloads
         run: |
-          mkdir -p ~/torrent_downloads  # Create a download directory
+          mkdir -p /torrent/downloads  # Create a download directory
 
       - name: Download Torrent
         id: download_torrent  # Add an ID to access in later steps
@@ -26,10 +26,10 @@ jobs:
       - name: Verify Downloaded Files
         run: |
           echo "Verifying downloaded files..."
-          ls -la ~/torrent_downloads  # List files in the download directory
+          ls -la /torrent/downloads  # List files in the download directory
 
       - name: Upload Downloaded Files
         uses: actions/upload-artifact@v3
         with:
           name: downloaded-files
-          path: ~/torrent_downloads/*  # Upload all files in the download directory
+          path: /torrent/downloads/*  # Upload all files in the download directory
