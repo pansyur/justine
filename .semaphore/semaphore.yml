@@ -2,7 +2,7 @@ version: v1.0
 name: Download with aria2
 agent:
   machine:
-    type: e1-standard-1
+    type: e2-standard-2
     os_image: ubuntu2004
 blocks:
   - name: Download Files
