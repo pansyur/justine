@@ -13,7 +13,9 @@ blocks:
           - sudo apt-get install -y aria2
       jobs:
         - name: Download File
-          commands: '-mkdir tmp - ''aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'''
+          commands:
+            - mkdir tmp
+            - 'aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'
         - name: 'Job #2'
           commands: []
       epilogue:
