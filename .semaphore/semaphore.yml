@@ -18,7 +18,7 @@ blocks:
         - name: 'Job #2'
           commands:
             - mkdir tmp
-            - zip /home/ out.zip  -d tmp
+            - zip out.zip /home/ -d tmp
       epilogue:
         on_pass:
           commands:
