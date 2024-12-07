@@ -1,11 +1,10 @@
 version: 2.1
-
 orbs:
   python: circleci/python@2.0.3
   heroku: circleci/heroku@1.2.6
 
 jobs:
-  build_and_test: # This can be any name you choose
+  build_and_test: # this can be any name you choose
     executor: python/default
     steps:
       - checkout
@@ -13,17 +12,19 @@ jobs:
           pkg-manager: pip
       - run:
           name: Run tests
-          command: python -m aria2  # Adjust this command based on your testing framework
-      - run: 
-          name: Download File
-          command: aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml
+          command: python -m pytest
       - persist_to_workspace:
-          root: /tmp
+          root: ~/project
           paths:
-            - horror-films-of-the-1940s_meta.xml  # Specify the downloaded file to persist
+            - .
 
-      - store_artifacts:
-          path: /tmp/horror-films-of-the-1940s_meta.xml  # Store the downloaded file as an artifact
+  deploy: # this can be any name you choose
+    executor: python/default
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - heroku/deploy-via-git:
+          force: true # force push when pushing to the heroku remote, see: https://devcenter.heroku.com/articles/git
 
 workflows:
   test_my_app:
@@ -31,7 +32,7 @@ workflows:
       - build_and_test
       - deploy:
           requires:
-            - build_and_test # Only deploy if the build_and_test job has completed
+            - build_and_test # only deploy if the build_and_test job has completed
           filters:
             branches:
-              only: main # Only deploy when on main branch
+              only: main # only deploy when on main
