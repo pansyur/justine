@@ -18,7 +18,7 @@ jobs:
           paths:
       - run: 
         name: Download 
-        command: aria2c -d /tmp "https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml"
+        command: aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml
 
       - store_artifacts:
           path: /tmp
