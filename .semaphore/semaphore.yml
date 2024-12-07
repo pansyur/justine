@@ -16,11 +16,8 @@ blocks:
           commands:
             - mkdir tmp
             - 'aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'
-        - name: 'Job #2'
-          commands:
-            - 'artifact pull job tmp '
       epilogue:
         on_pass:
           commands:
             - checkout
-            - artifact push job tmp
+            - artifact push job tmp/horror-films-of-the-1940s_meta.xml
