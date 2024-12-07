@@ -14,4 +14,4 @@ blocks:
       jobs:
         - name: Download File
           commands:
-            - 'aria2c http://example.com/file.zip'
+           - 'aria2c 'https://ia800505.us.archive.org/25/items/horror-films-of-the-1940s/1940-06-07%20-%20The%20Ghost%20Breakers%20%281940%29.mp4''
