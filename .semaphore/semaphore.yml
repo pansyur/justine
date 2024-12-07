@@ -2,8 +2,8 @@ version: v1.0
 name: Download with aria2
 agent:
   machine:
-    type: e1-standard-2
-    os_image: ubuntu-20.04
+    type: e1-standard-1
+    os_image: ubuntu2004
 blocks:
   - name: Download Files
     task:
