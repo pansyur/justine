@@ -1,30 +1,35 @@
 version: 2.1
+orbs:
+  python: circleci/python@2.0.3
+  heroku: circleci/heroku@1.2.6
 
 jobs:
-  download:
-    docker:
-      - image: circleci/ubuntu:20.04  # Use Ubuntu image
+  build_and_test: # this can be any name you choose
+    executor: python/default
     steps:
       - checkout
-
+      - python/install-packages:
+          pkg-manager: pip
       - run:
-          name: Install aria2
-          command: sudo apt-get update && sudo apt-get install -y aria2
-
-      - run:
-          name: Download File with aria2
-          command: aria2c -d /tmp/artifacts 'https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'   # Replace with your actual URL
-
-      - run:
-        name: Creating Dummy Artifacts
-        command: mkdir /tmp/artifacts
+          name: Run tests
+          command: python -m aria2
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+      - run: 
+        name: Download 
+        command: aria2c -d /tmp "https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml"
 
       - store_artifacts:
-        path: /tmp/artifacts
-              
-
+          path: /tmp
+          
 workflows:
-  version: 2
-  build_and_download:
+  test_my_app:
     jobs:
-      - download
+      - build_and_test
+      - deploy:
+          requires:
+            - build_and_test # only deploy if the build_and_test job has completed
+          filters:
+            branches:
+              only: main # only deploy when on main
