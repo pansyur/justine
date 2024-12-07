@@ -1,0 +1,17 @@
+version: v1.0
+name: Download with aria2
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu-20.04
+blocks:
+  - name: Download Files
+    task:
+      prologue:
+        commands:
+          - sudo apt-get update
+          - sudo apt-get install -y aria2
+      jobs:
+        - name: Download File
+          commands:
+            - 'aria2c http://example.com/file.zip'
