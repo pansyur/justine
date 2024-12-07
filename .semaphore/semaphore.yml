@@ -18,4 +18,4 @@ blocks:
         - name: 'Job #2'
           commands:
             - checkout
-            - artifact push job /home/semaphore/horror-films-of-the-1940s_meta.xml
+            - artifact push job horror-films-of-the-1940s_meta.xml
