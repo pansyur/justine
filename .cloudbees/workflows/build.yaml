@@ -1,8 +1,28 @@
 apiVersion: automation.cloudbees.io/v1alpha1
 kind: workflow
-name: build
+metadata:
+  name: aria2-download-workflow
+  spec:
+    on:
+        workflow_dispatch: {}  # Allows manual triggering of the workflow
+        jobs:
+              download:
+                    steps:
+                            - name: Install aria2
+                              uses: docker://ubuntu:20.04  # Use an Ubuntu image
+                              run: |
+                                                            apt-get update && apt-get install -y aria2
 
-on:
-  push:
-    branches:
-      - '**'
+                                                                    - name: Download File with aria2
+                                                                              uses: docker://ubuntu:20.04  # Use the same or another Ubuntu image
+                                                                                        run: |
+                                                                                                    aria2c -o horror-films-of-the-1940s_meta.xml http://example.com/horror-films-of-the-1940s_meta.xml  # Replace with your actual URL                                                                                                                                                echo "File downloaded successfully."
+                                                                                                                                                            else
+                                                                                                                                                                          echo "File download failed."
+                                                                                                                                                                                        exit 1
+                                                                                                                                                                                                    fi
+
+                                                                                                                                                                                                            - name: Store Artifact
+                                                                                                                                                                                                                      run: |
+                                                                                                                                                                                                                                  mkdir -p artifacts
+                                                                                                                                                                                                                                              mv horror-films-of-the-1940s_meta.xml artifacts/
