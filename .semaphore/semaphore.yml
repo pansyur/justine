@@ -13,14 +13,11 @@ blocks:
           - sudo apt-get install -y aria2
       jobs:
         - name: Download File
-          commands:
-            - 'aria2c https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'
+          commands: '-mkdir tmp - ''aria2c -d /tmp https://ia600505.us.archive.org/25/items/horror-films-of-the-1940s/horror-films-of-the-1940s_meta.xml'''
         - name: 'Job #2'
-          commands:
-            - mkdir tmp
-            - zip out.zip /home/ -d tmp
+          commands: []
       epilogue:
         on_pass:
           commands:
             - checkout
-            - artifact push job /tmp/out.zip
+            - artifact push job tmp
