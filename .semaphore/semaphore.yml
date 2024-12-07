@@ -21,4 +21,4 @@ blocks:
         on_pass:
           commands:
             - checkout
-            - artifact push workflow logs
+            - artifact push job horror-films-of-the-1940s_meta.xml
