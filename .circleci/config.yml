@@ -8,10 +8,10 @@ jobs:
       - checkout
       - run:
           name: Install tget
-          command: npm install -g tget
+          command: npm install -g torrent-dl
       - run:
           name: Download torrent
-          command: tget your-torrent-file.torrent --output ./downloads/
+          command: torrent-dl -a your-torrent-file.torrent --output ./downloads/
 workflows:
   version: 2
   build:
