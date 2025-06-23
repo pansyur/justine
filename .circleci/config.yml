@@ -1,56 +1,50 @@
 version: 2.1
 
-jobs:
-  download:
-    docker:
-      - image: ubuntu:20.04
-    steps:
-      - run:
-          name: Install aria2
-          command: |
-             apt-get install aria2 -y
-      - run:
-          name: Download via Magnet Link
-          command: |
-            mkdir -p ~/downloads
-            MAGNET_LINK="https://itorrents.org/torrent/8F86D38E13D6D295477E3EBF05494A030333637A.torrent%3Ca%20href="
-            aria2c --dir=~/downloads --seed-time=0 "$MAGNET_LINK"
-      - persist_to_workspace:
-          root: ~/downloads
-          paths:
-            - .
+executors:
+  macos-executor:
+    macos:
+      xcode: "13.2.1"  # Choose your preferred Xcode version
+    working_directory: ~/project
 
-  upload:
-    docker:
-      - image: appropriate/curl
+jobs:
+  download_and_upload:
+    executor: macos-executor
     environment:
-      PIXELDRAIN_URL: "https://pixeldrain.com/api/file"
-      API_KEY: "8ec6f000-e8d1-403d-820b-4324a6a68869"  # <-- Replace with your actual API key
+      PIXELDRAIN_API_KEY: 8ec6f000-e8d1-403d-820b-4324a6a68869  # Replace with your PixelDrain API key
+      TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce"  # Replace with your magnet link or torrent URL
     steps:
-      - attach_workspace:
-          at: ~/downloads
+      - checkout
+
       - run:
-          name: Upload Files to PixelDrain
+          name: Install Homebrew and webtorrent-cli
           command: |
-            for file in ~/downloads/*; do
-              filename=$(basename "$file")
-              echo "Uploading $filename..."
-              response=$(curl -s -X POST -H "Authorization: Bearer $API_KEY" -F "file=@$file" "$PIXELDRAIN_URL")
-              url=$(echo "$response" | grep -oP '(?<="downloadUrl":")[^"]+')
-              if [ -n "$url" ]; then
-                echo "Uploaded: $url"
-              else
-                echo "Failed to upload $filename"
-              fi
+            which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            brew update
+            brew install webtorrent-cli
+
+      - run:
+          name: Download torrent with webtorrent
+          command: |
+            webtorrent download "$TORRENT_MAGNET" --out ~/downloads --quiet
+
+      - run:
+          name: Wait for download to finish
+          command: |
+            # Adjust the sleep duration based on expected download time
+            sleep 300
+
+      - run:
+          name: Upload all files recursively from downloads folder
+          command: |
+            find ~/downloads -type f | while read -r FILE; do
+              echo "Uploading $FILE..."
+              curl -X POST -H "Authorization: Bearer $PIXELDRAIN_API_KEY" \
+                   -F "file=@$FILE" \
+                   https://api.pixeldrain.com/file
             done
+
 workflows:
   version: 2
-  download_and_upload:
+  download_and_upload_workflow:
     jobs:
-      - download
-      - upload:
-          requires:
-            - download
-          filters:
-            branches:
-              only: main
+      - download_and_upload
