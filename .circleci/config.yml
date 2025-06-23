@@ -3,7 +3,8 @@ version: 2.1
 executors:
   macos-executor:
     macos:
-      xcode: "13.2.1"  # Choose your preferred Xcode version
+      xcode: "14.1"  # Choose a supported Xcode version
+    resource_class: macos.xlarge  # Choose a supported resource class
     working_directory: ~/project
 
 jobs:
