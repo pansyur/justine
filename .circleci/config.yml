@@ -1,15 +1,9 @@
 version: 2.1
 
-executors:
-  macos-executor:
-    macos:
-      xcode: "14.1"  # Choose a supported Xcode version
-    resource_class: macos.xlarge  # Choose a supported resource class
-    working_directory: ~/project
-
 jobs:
   download_and_upload:
-    executor: macos-executor
+    docker:
+      - image: cimg/node:18.17  # Use the Node.js 18 image, you can change to other versions
     environment:
       PIXELDRAIN_API_KEY: 8ec6f000-e8d1-403d-820b-4324a6a68869  # Replace with your PixelDrain API key
       TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce"  # Replace with your magnet link or torrent URL
@@ -17,27 +11,25 @@ jobs:
       - checkout
 
       - run:
-          name: Install Homebrew and webtorrent-cli
+          name: Install dependencies
           command: |
-            which brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            brew update
-            brew install webtorrent-cli
+            # Install webtorrent-cli globally
+            npm install -g webtorrent
 
       - run:
-          name: Download torrent with webtorrent
+          name: Download torrent
           command: |
-            webtorrent download "$TORRENT_MAGNET" --out ~/downloads --quiet
+            webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
           name: Wait for download to finish
           command: |
-            # Adjust the sleep duration based on expected download time
-            sleep 300
+            sleep 300  # Adjust time as needed
 
       - run:
-          name: Upload all files recursively from downloads folder
+          name: Upload files to PixelDrain
           command: |
-            find ~/downloads -type f | while read -r FILE; do
+            find ./downloads -type f | while read -r FILE; do
               echo "Uploading $FILE..."
               curl -X POST -H "Authorization: Bearer $PIXELDRAIN_API_KEY" \
                    -F "file=@$FILE" \
