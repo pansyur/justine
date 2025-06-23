@@ -22,14 +22,16 @@ jobs:
            npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
-          name: Upload files to PixelDrain
-          command: |
-            find ./downloads -type f | while read -r FILE; do
-              echo "Uploading $FILE..."
-              curl -X POST -H "Authorization: Bearer $PIXELDRAIN_API_KEY" \
-                   -F "file=@$FILE" \
-                   https://pixeldrain.com/api/file/
-            done
+    name: Upload files to Filebin in specific bin
+    command: |
+      BIN_NAME="fn5l2fc0lh3bplas"  # or generate a unique bin name
+      find ./downloads -type f | while read -r FILE; do
+        FILENAME=$(basename "$FILE")
+        echo "Uploading $FILE to bin '$BIN_NAME' with filename '$FILENAME'..."
+        RESPONSE=$(curl -s -X POST --data-binary "@$FILE" "https://filebin.net/$BIN_NAME/$FILENAME" \
+          -H "Content-Type: application/octet-stream")
+        echo "Uploaded $FILE to: https://filebin.net/$BIN_NAME/$FILENAME"
+      done
 
 workflows:
   version: 2
