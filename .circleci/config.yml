@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Download torrent
           command: |
-            webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
+           npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
           name: Wait for download to finish
