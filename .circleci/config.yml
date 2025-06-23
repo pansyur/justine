@@ -14,7 +14,7 @@ jobs:
           name: Install dependencies
           command: |
             # Install webtorrent-cli globally
-            npm install -g webtorrent
+            npm install webtorrent-cli
 
       - run:
           name: Download torrent
