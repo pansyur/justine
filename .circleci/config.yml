@@ -1,19 +1,87 @@
----
 version: 2.1
+
 jobs:
   build:
     docker:
-      - image: circleci/node:latest
+      - image: circleci/python:3.8  # Use Python 3.8 Docker image
+    resource_class: xlarge  # Different machine type
     steps:
       - checkout
+
       - run:
-          name: Install tget
-          command: npm install -g torrent-dl
+          name: Install system dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y libtorrent-rasterbar-dev
+
       - run:
-          name: Download torrent
-          command: torrent-dl -a your-torrent-file.torrent --output ./downloads/
+          name: Install Python dependencies
+          command: |
+            pip install python-libtorrent
+
+      - run:
+          name: Download torrent with Python script
+          command: |
+            echo "Creating download directory..."
+            mkdir -p ~/downloads
+
+            # Save the Python script
+            cat > download_torrent.py <<EOF
+import libtorrent as lt
+import time
+import sys
+import os
+
+def download_torrent(magnet_uri, save_path):
+    ses = lt.session()
+    params = {
+        'save_path': save_path,
+        'storage_mode': lt.storage_mode_t.storage_mode_allocate,
+    }
+    handle = lt.add_magnet_uri(ses, magnet_uri, params)
+    print('Fetching Metadata...')
+    while not handle.has_metadata():
+        time.sleep(1)
+    print('Metadata received, starting download...')
+    handle.set_sequential_download(True)
+
+    while handle.status().state != lt.torrent_status.seeding:
+        s = handle.status()
+        progress = s.progress * 100
+        print(f"Progress: {progress:.2f}% | Download Rate: {s.download_rate / 1024:.2f} kB/s | Peers: {s.num_peers}")
+        time.sleep(5)
+    print('Download complete.')
+
+if __name__ == "__main__":
+    magnet_uri = sys.argv[1]
+    save_path = sys.argv[2]
+    download_torrent(magnet_uri, save_path)
+EOF
+
+            # Run the script with your magnet link
+            MAGNET_LINK="magnet:?xt=urn:btih:8253f79dc1c2bd8d266c4c0d46299458cb50be02&dn=KPop+Demon+Hunters+2025+1080p+NF+WEB-DL+DDP5+1+Atmos+H+264-FLUX%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce"
+            python download_torrent.py "$MAGNET_LINK" "~/downloads"
+
+            echo "Download finished. Files in ~/downloads:"
+            ls -l ~/downloads
+
+      - run:
+          name: Upload files to Filebin
+          command: |
+            BIN_NAME="fn5l2fc0lh3bplas"
+            for file in ~/downloads/*; do
+              filename=$(basename "$file")
+              echo "Uploading $filename..."
+              response=$(curl -s -w "%{http_code}" --upload-file "$file" "https://filebin.net/$BIN_NAME/$filename")
+              http_code=$(echo "$response" | tail -n1)
+              if [ "$http_code" != "200" ]; then
+                echo "Failed to upload $filename"
+              else
+                echo "$filename uploaded successfully."
+              fi
+            done
 workflows:
   version: 2
-  build:
+  build_and_upload:
     jobs:
       - build
