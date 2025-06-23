@@ -22,18 +22,13 @@ jobs:
            npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
-          name: Wait for download to finish
-          command: |
-            sleep 300  # Adjust time as needed
-
-      - run:
           name: Upload files to PixelDrain
           command: |
             find ./downloads -type f | while read -r FILE; do
               echo "Uploading $FILE..."
               curl -X POST -H "Authorization: Bearer $PIXELDRAIN_API_KEY" \
                    -F "file=@$FILE" \
-                   https://api.pixeldrain.com/file
+                   https://pixeldrain.com/api/file/
             done
 
 workflows:
