@@ -8,7 +8,7 @@ jobs:
       - run:
           name: Install aria2
           command: |
-             pip install aria2
+             apt-get install aria2 -y
       - run:
           name: Download via Magnet Link
           command: |
