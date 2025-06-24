@@ -4,8 +4,8 @@ jobs:
   download_and_upload:
     docker:
       - image: cimg/node:18.17  # Use the Node.js 18 image
-    environment:
-      TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce"  # Your magnet link
+    environment  # Your PixelDrain API key
+      TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce"  # Replace with your magnet link
     steps:
       - checkout
 
@@ -20,14 +20,10 @@ jobs:
             npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
-          name: Generate unique bin name
-          command: |
-            BIN_NAME="bin_$(date +%Y%m%d%H%M%S%N)"
-            echo "export BIN_NAME=$BIN_NAME" > bin_name.sh
-      - run:
           name: Upload files to Filebin
           command: |
-            source bin_name.sh
+            # Replace 'fn5l2fc0lh3bplas' with your actual bin name
+            BIN_NAME="fn5l2fc0lh3bplas"
             find ./downloads -type f | while read -r FILE; do
               FILENAME=$(basename "$FILE")
               echo "Uploading $FILE to bin '$BIN_NAME' with filename '$FILENAME'..."
