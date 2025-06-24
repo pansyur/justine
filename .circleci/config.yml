@@ -11,7 +11,7 @@ jobs:
           name: Install dependencies
           command: |
             npm install webtorrent-cli
-            pip3 install awscli
+            pip install awscli
 
       - run:
           name: Download torrent
