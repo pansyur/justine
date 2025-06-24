@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   download_and_upload:
     docker:
-      - image: cimg/python:3.9
+      - image: circleci/node:16.20
     environment:
       AWS_ACCESS_KEY_ID: F189A7FA8FC1ADA26576
       AWS_SECRET_ACCESS_KEY: DkFntlO7VYWNH64MeN3LeUbLIpAr22AhFkBNsVNq
@@ -13,21 +13,22 @@ jobs:
       - checkout
 
       - run:
-          name: Install Node.js and npm
+          name: Install Python and awscli
           command: |
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -y nodejs
+            # Install Python 3.9
+            sudo apt-get update
+            sudo apt-get install -y python3 python3-pip
+            pip3 install awscli
 
       - run:
-          name: Install dependencies
+          name: Install webtorrent-cli
           command: |
-            pip install awscli
-            npm install webtorrent-cli
+            npm install -g webtorrent-cli
 
       - run:
           name: Download torrent
           command: |
-            npx webtorrent download "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce" --out ./downloads --quiet
+            webtorrent download "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025" --out ./downloads --quiet
 
       - run:
           name: Configure AWS CLI for Filebase
