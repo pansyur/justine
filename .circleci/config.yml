@@ -49,3 +49,10 @@ jobs:
       - run:
           name: Clean up
           command: rm -rf ./downloads
+
+      
+workflows:
+  version: 2
+  upload_workflow:
+    jobs:
+      - download_and_upload
