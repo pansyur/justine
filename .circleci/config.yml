@@ -4,7 +4,8 @@ jobs:
   download_and_upload:
     docker:
       - image: cimg/node:18.17  # Use the Node.js 18 image
-    environment  # Your PixelDrain API key
+    environment:
+      PIXELDRAIN_API_KEY: 8ec6f000-e8d1-403d-820b-4324a6a68869  # Your PixelDrain API key
       TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce"  # Replace with your magnet link
     steps:
       - checkout
@@ -22,7 +23,46 @@ jobs:
       - run:
           name: Upload files to Filebin
           command: |
-            # Replace 'fn5l2fc0lh3bplas' with your actual bin name
+            # Replace 'your_bin_name_here' with your actual bin name
+            BIN_NAME="your_bin_name_here"
+            find ./downloads -type f | while read -r FILE; do
+              FILENAME=$(basename "$FILE")
+              echo "Uploading $FILE to bin '$BIN_NAME' with filename '$FILENAME'..."
+              curl -s -X POST --data-binary "@$FILE" "https://filebin.net/$BIN_NAME/$FILENAME" \
+                -H "Content-Type: application/octet-stream"
+              echo "File uploaded: https://filebin.net/$BIN_NAME/$FILENAME"
+            done
+
+workflows:
+  version: 2
+  download_and_upload_workflow:
+    jobs:
+      - download_and_uploadversion: 2.1
+
+jobs:
+  download_and_upload:
+    docker:
+      - image: cimg/node:18.17  # Use the Node.js 18 image
+    environment:
+    # Your PixelDrain API key
+      TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce"  # Replace with your magnet link
+    steps:
+      - checkout
+
+      - run:
+          name: Install dependencies
+          command: |
+            npm install webtorrent-cli
+
+      - run:
+          name: Download torrent
+          command: |
+            npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
+
+      - run:
+          name: Upload files to Filebin
+          command: |
+            # Replace 'your_bin_name_here' with your actual bin name
             BIN_NAME="fn5l2fc0lh3bplas"
             find ./downloads -type f | while read -r FILE; do
               FILENAME=$(basename "$FILE")
