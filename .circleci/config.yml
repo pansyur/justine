@@ -3,14 +3,14 @@ version: 2.1
 jobs:
   download_and_upload:
     docker:
-      - image: cimg/node:18.17
+      - image: cimg/python:3.9  # Use Python image for boto3
     steps:
       - checkout
 
       - run:
           name: Install dependencies
           command: |
-            npm install @filen/cli
+            pip install boto3
             npm install webtorrent-cli
 
       - run:
@@ -19,15 +19,38 @@ jobs:
             npx webtorrent download "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce" --out ./downloads --quiet
 
       - run:
-          name: Upload files to Filen
+          name: Upload files to Backblaze B2
           command: |
-            # Set environment variables
-            export FILEN_EMAIL="giannabutre@gmail.com"
-            export FILEN_PASSWORD="Goodiebops"
+            # Set environment variables for B2 credentials and bucket
+            export B2_ACCOUNT_ID="your_b2_account_id"
+            export B2_ACCOUNT_KEY="your_b2_account_key"
+            export B2_BUCKET_NAME="your_bucket_name"
+            export B2_BUCKET_ID="your_bucket_id" # Optional, if needed
 
-            # Upload the entire 'downloads/' folder
-            filen --email=$FILEN_EMAIL --password=$FILEN_PASSWORD upload downloads/ Files/
-      
+            # Upload files from 'downloads/' directory
+            python -c "
+import boto3
+import os
+
+# Initialize B2 session
+session = boto3.session.Session()
+client = session.client('s3',
+                        endpoint_url='https://s3.us-west-000.backblazeb2.com',  # Replace with your region's endpoint
+                        aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
+                        aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
+
+bucket_name = os.environ['B2_BUCKET_NAME']
+directory = 'downloads/'
+
+for root, dirs, files in os.walk(directory):
+    for filename in files:
+        filepath = os.path.join(root, filename)
+        key = os.path.relpath(filepath, directory)
+        with open(filepath, 'rb') as data:
+            client.upload_fileobj(data, bucket_name, key)
+            print(f'Uploaded {key}')
+"
+          
 workflows:
   build:
     jobs:
