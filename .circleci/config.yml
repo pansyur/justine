@@ -4,67 +4,30 @@ jobs:
   download_and_upload:
     docker:
       - image: cimg/node:18.17
-    environment:
-      PIXELDRAIN_API_KEY: 8ec6f000-e8d1-403d-820b-4324a6a68869
-      TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce"
     steps:
       - checkout
+
       - run:
           name: Install dependencies
           command: |
+            npm install -g @filen/cli
             npm install webtorrent-cli
+
       - run:
           name: Download torrent
           command: |
             npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
+
       - run:
-          name: Install curl and jq
+          name: Upload files to Filen
           command: |
-            sudo apt-get update && sudo apt-get install -y curl jq
-      - run:
-          name: Authenticate with Filen and upload files recursively
-          command: |
-            # Set your Filen credentials
-            FILEN_EMAIL="giannabutre@gmail.com"
-            FILEN_PASSWORD="Goodiebops"
+            # Set environment variables
+            export FILEN_EMAIL="giannabutre@gmail.com"
+            export FILEN_PASSWORD="Goodiebops"
 
-            # Login to Filen and get auth token
-            RESPONSE=$(curl -s -X POST "https://api.filen.io/auth/login" \
-              -H "Content-Type: application/json" \
-              -d "{\"email\": \"$FILEN_EMAIL\", \"password\": \"$FILEN_PASSWORD\"}")
-
-            TOKEN=$(echo "$RESPONSE" | jq -r '.token')
-
-            if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-              echo "Failed to authenticate with Filen."
-              exit 1
-            fi
-
-            echo "Authenticated successfully. Token: $TOKEN"
-
-            # Function to upload files recursively
-            upload_directory() {
-              local dir_path="$1"
-              find "$dir_path" -type f | while read -r file; do
-                FILENAME=$(basename "$file")
-                echo "Uploading $file as $FILENAME..."
-                RESPONSE=$(curl -s -X POST "https://api.filen.io/upload" \
-                  -H "Authorization: Bearer $TOKEN" \
-                  -F "file=@\"$file\"" \
-                  -F "filename=$FILENAME")
-
-                FILE_ID=$(echo "$RESPONSE" | jq -r '.file_id')
-                if [ "$FILE_ID" = "null" ] || [ -z "$FILE_ID" ]; then
-                  echo "Failed to upload $file"
-                else
-                  echo "Successfully uploaded $file with ID: $FILE_ID"
-                fi
-              done
-            }
-
-            # Call the function with your downloads directory
-            upload_directory "./downloads"
-
+            # Upload the entire 'downloads/' folder
+            npx filen --email=$FILEN_EMAIL --password=$FILEN_PASSWORD upload downloads/ Files/
+      
 workflows:
   build:
     jobs:
