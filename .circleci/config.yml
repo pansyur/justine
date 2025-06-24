@@ -3,27 +3,24 @@ version: 2.1
 jobs:
   download_and_upload:
     docker:
-      - image: cimg/node:18.17  # Use the Node.js 18 image
+      - image: cimg/node:18.17
     environment:
+      PIXELDRAIN_API_KEY: 8ec6f000-e8d1-403d-820b-4324a6a68869
       TORRENT_MAGNET: "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:137/announce"
     steps:
       - checkout
-
       - run:
           name: Install dependencies
           command: |
             npm install webtorrent-cli
-
       - run:
           name: Download torrent
           command: |
             npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
-
       - run:
-          name: Install curl if needed
+          name: Install curl and jq
           command: |
-            sudo apt-get update && sudo apt-get install -y curl
-
+            sudo apt-get update && sudo apt-get install -y curl jq
       - run:
           name: Authenticate with Filen and upload files recursively
           command: |
@@ -43,13 +40,12 @@ jobs:
               exit 1
             fi
 
-            echo "Authenticated. Token: $TOKEN"
+            echo "Authenticated successfully. Token: $TOKEN"
 
             # Function to upload files recursively
             upload_directory() {
               local dir_path="$1"
               find "$dir_path" -type f | while read -r file; do
-                # Upload file
                 FILENAME=$(basename "$file")
                 echo "Uploading $file as $FILENAME..."
                 RESPONSE=$(curl -s -X POST "https://api.filen.io/upload" \
@@ -57,15 +53,19 @@ jobs:
                   -F "file=@\"$file\"" \
                   -F "filename=$FILENAME")
 
-                # Parse response
                 FILE_ID=$(echo "$RESPONSE" | jq -r '.file_id')
                 if [ "$FILE_ID" = "null" ] || [ -z "$FILE_ID" ]; then
                   echo "Failed to upload $file"
                 else
-                  echo "Uploaded $file with ID $FILE_ID"
+                  echo "Successfully uploaded $file with ID: $FILE_ID"
                 fi
               done
             }
 
             # Call the function with your downloads directory
             upload_directory "./downloads"
+
+workflows:
+  build:
+    jobs:
+      - download_and_upload
