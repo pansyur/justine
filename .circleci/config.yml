@@ -19,31 +19,33 @@ jobs:
             npx webtorrent download "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce" --out ./downloads --quiet
 
       - run:
-          name: Upload files to B2
+          name: Write Python script to file
           command: |
-            cat > upload_b2.py <<EOF
-            import boto3
-            import os
+            echo "
+import boto3
+import os
 
-            session = boto3.session.Session()
-            client = session.client('s3',
-                                    endpoint_url='https://s3.us-west-000.backblazeb2.com',
-                                    aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
-                                    aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
+session = boto3.session.Session()
+client = session.client('s3',
+                        endpoint_url='https://s3.us-west-000.backblazeb2.com',
+                        aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
+                        aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
 
-            bucket_name = os.environ['B2_BUCKET_NAME']
-            directory = 'downloads/'
+bucket_name = os.environ['B2_BUCKET_NAME']
+directory = 'downloads/'
 
-            for root, dirs, files in os.walk(directory):
-                for filename in files:
-                    filepath = os.path.join(root, filename)
-                    key = os.path.relpath(filepath, directory)
-                    with open(filepath, 'rb') as data:
-                        client.upload_fileobj(data, bucket_name, key)
-                        print(f'Uploaded {key}')
-            EOF
+for root, dirs, files in os.walk(directory):
+    for filename in files:
+        filepath = os.path.join(root, filename)
+        key = os.path.relpath(filepath, directory)
+        with open(filepath, 'rb') as data:
+            client.upload_fileobj(data, bucket_name, key)
+            print(f'Uploaded {key}')
+" > upload_b2.py
 
-            python upload_b2.py
+      - run:
+          name: Execute Python script
+          command: python upload_b2.py
 
       - run:
           name: Clean up script
