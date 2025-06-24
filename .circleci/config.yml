@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   download_and_upload:
     docker:
-      - image: cimg/python:3.9  # Use Python image for boto3
+      - image: cimg/python:3.9
     steps:
       - checkout
 
@@ -21,21 +21,13 @@ jobs:
       - run:
           name: Upload files to Backblaze B2
           command: |
-            # Set environment variables for B2 credentials and bucket
-            export B2_ACCOUNT_ID="your_b2_account_id"
-            export B2_ACCOUNT_KEY="your_b2_account_key"
-            export B2_BUCKET_NAME="your_bucket_name"
-            export B2_BUCKET_ID="your_bucket_id" # Optional, if needed
-
-            # Upload files from 'downloads/' directory
-            python -c "
+            echo "
 import boto3
 import os
 
-# Initialize B2 session
 session = boto3.session.Session()
 client = session.client('s3',
-                        endpoint_url='https://s3.us-west-000.backblazeb2.com',  # Replace with your region's endpoint
+                        endpoint_url='https://s3.us-west-000.backblazeb2.com',  # Use your region's endpoint
                         aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
                         aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
 
@@ -49,7 +41,13 @@ for root, dirs, files in os.walk(directory):
         with open(filepath, 'rb') as data:
             client.upload_fileobj(data, bucket_name, key)
             print(f'Uploaded {key}')
-"
+" > upload_b2.py
+
+            python upload_b2.py
+          
+      - run:
+          name: Clean up script
+          command: rm upload_b2.py
           
 workflows:
   build:
