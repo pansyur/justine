@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Download torrent
           command: |
-            npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
+            npx webtorrent download "magnet:?xt=urn:btih:BA444C4A51BA5DC650A926BCD0EC4B4308BA3761&dn=Secrets in Suburbia (2017)&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969" --out ./downloads --quiet
 
       - run:
           name: Upload files to Filen
