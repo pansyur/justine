@@ -10,7 +10,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            npm install -g @filen/cli
+            npm install @filen/cli
             npm install webtorrent-cli
 
       - run:
