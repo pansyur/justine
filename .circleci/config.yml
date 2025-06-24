@@ -4,13 +4,19 @@ jobs:
   download_and_upload:
     docker:
       - image: cimg/python:3.9
+    environment:
+      # Set these in your CircleCI project settings for security
+      AWS_ACCESS_KEY_ID: F189A7FA8FC1ADA26576
+      AWS_SECRET_ACCESS_KEY: DkFntlO7VYWNH64MeN3LeUbLIpAr22AhFkBNsVNq
+      B2_BUCKET_NAME: arielle
+      ENDPOINT_URL: https://s3.filebase.com
     steps:
       - checkout
 
       - run:
           name: Install dependencies
           command: |
-            pip install boto3
+            pip install awscli
             npm install webtorrent-cli
 
       - run:
@@ -19,39 +25,24 @@ jobs:
             npx webtorrent download "magnet:?xt=urn:btih:8F86D38E13D6D295477E3EBF05494A030333637A&dn=Ke+X.+Space-Time+Coding+Theory+in+Optical+Wireless+MIMO+Systems+2025%20%20%20%20%20%20%20%20&tr=udp://tracker.bittor.pw:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.opentrackr.org:1337/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.dler.org:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.stealth.si:80/announce%20%20%20%20%20%20%20%20&tr=udp://tracker.torrent.eu.org:451/announce%20%20%20%20%20%20%20%20&tr=udp://exodus.desync.com:6969/announce%20%20%20%20%20%20%20%20&tr=udp://open.demonii.com:1337/announce" --out ./downloads --quiet
 
       - run:
-          name: Write Python script to file
+          name: Configure AWS CLI for Filebase
           command: |
-            echo "
-import boto3
-import os
-
-session = boto3.session.Session()
-client = session.client('s3',
-                        endpoint_url='https://s3.us-west-000.backblazeb2.com',
-                        aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
-                        aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
-
-bucket_name = os.environ['B2_BUCKET_NAME']
-directory = 'downloads/'
-
-for root, dirs, files in os.walk(directory):
-    for filename in files:
-        filepath = os.path.join(root, filename)
-        key = os.path.relpath(filepath, directory)
-        with open(filepath, 'rb') as data:
-            client.upload_fileobj(data, bucket_name, key)
-            print(f'Uploaded {key}')
-" > upload_b2.py
+            mkdir -p ~/.aws
+            echo "[default]" > ~/.aws/credentials
+            echo "aws_access_key_id=${AWS_ACCESS_KEY_ID}" >> ~/.aws/credentials
+            echo "aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
 
       - run:
-          name: Execute Python script
-          command: python upload_b2.py
+          name: Upload files to Filebase
+          command: |
+            aws s3 cp ./downloads/ s3://${B2_BUCKET_NAME}/ --recursive --endpoint-url ${ENDPOINT_URL}
 
       - run:
-          name: Clean up script
-          command: rm upload_b2.py
+          name: Clean up downloads
+          command: rm -rf ./downloads
 
 workflows:
-  build:
+  version: 2
+  upload_workflow:
     jobs:
       - download_and_upload
