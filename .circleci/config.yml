@@ -11,6 +11,7 @@ jobs:
           name: Install dependencies
           command: |
             pip install boto3
+            npm install @filen/cli
             npm install webtorrent-cli
 
       - run:
@@ -21,13 +22,13 @@ jobs:
       - run:
           name: Upload files to Backblaze B2
           command: |
-            echo "
+            cat > upload_b2.py <<EOF
 import boto3
 import os
 
 session = boto3.session.Session()
 client = session.client('s3',
-                        endpoint_url='https://s3.us-west-000.backblazeb2.com',  # Use your region's endpoint
+                        endpoint_url='https://s3.us-west-000.backblazeb2.com',  # Replace with your region's endpoint
                         aws_access_key_id=os.environ['B2_ACCOUNT_ID'],
                         aws_secret_access_key=os.environ['B2_ACCOUNT_KEY'])
 
@@ -41,14 +42,14 @@ for root, dirs, files in os.walk(directory):
         with open(filepath, 'rb') as data:
             client.upload_fileobj(data, bucket_name, key)
             print(f'Uploaded {key}')
-" > upload_b2.py
+EOF
 
             python upload_b2.py
-          
+
       - run:
           name: Clean up script
           command: rm upload_b2.py
-          
+
 workflows:
   build:
     jobs:
