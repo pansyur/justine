@@ -20,20 +20,52 @@ jobs:
             npx webtorrent download "$TORRENT_MAGNET" --out ./downloads --quiet
 
       - run:
-          name: Upload files to Filebin
+          name: Install curl if needed
           command: |
-            # Replace 'your_bin_name_here' with your actual bin name
-            BIN_NAME="fn5l2fc0lh3bplas"
-            find ./downloads -type f | while read -r FILE; do
-              FILENAME=$(basename "$FILE")
-              echo "Uploading $FILE to bin '$BIN_NAME' with filename '$FILENAME'..."
-              curl -s -X POST --data-binary "@$FILE" "https://filebin.net/$BIN_NAME/$FILENAME" \
-                -H "Content-Type: application/octet-stream"
-              echo "File uploaded: https://filebin.net/$BIN_NAME/$FILENAME"
-            done
+            sudo apt-get update && sudo apt-get install -y curl
 
-workflows:
-  version: 2
-  download_and_upload_workflow:
-    jobs:
-      - download_and_upload
+      - run:
+          name: Authenticate with Filen and upload files recursively
+          command: |
+            # Set your Filen credentials
+            FILEN_EMAIL="giannabutre@gmail.com"
+            FILEN_PASSWORD="Goodiebops"
+
+            # Login to Filen and get auth token
+            RESPONSE=$(curl -s -X POST "https://api.filen.io/auth/login" \
+              -H "Content-Type: application/json" \
+              -d "{\"email\": \"$FILEN_EMAIL\", \"password\": \"$FILEN_PASSWORD\"}")
+
+            TOKEN=$(echo "$RESPONSE" | jq -r '.token')
+
+            if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+              echo "Failed to authenticate with Filen."
+              exit 1
+            fi
+
+            echo "Authenticated. Token: $TOKEN"
+
+            # Function to upload files recursively
+            upload_directory() {
+              local dir_path="$1"
+              find "$dir_path" -type f | while read -r file; do
+                # Upload file
+                FILENAME=$(basename "$file")
+                echo "Uploading $file as $FILENAME..."
+                RESPONSE=$(curl -s -X POST "https://api.filen.io/upload" \
+                  -H "Authorization: Bearer $TOKEN" \
+                  -F "file=@\"$file\"" \
+                  -F "filename=$FILENAME")
+
+                # Parse response
+                FILE_ID=$(echo "$RESPONSE" | jq -r '.file_id')
+                if [ "$FILE_ID" = "null" ] || [ -z "$FILE_ID" ]; then
+                  echo "Failed to upload $file"
+                else
+                  echo "Uploaded $file with ID $FILE_ID"
+                fi
+              done
+            }
+
+            # Call the function with your downloads directory
+            upload_directory "./downloads"
